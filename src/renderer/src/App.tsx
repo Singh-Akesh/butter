@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { Mesh } from 'three'
 import { Room } from './components/Room'
 import { Table } from './components/Table'
 import { Lighting } from './components/Lighting'
@@ -9,19 +11,23 @@ import { Chairs } from './components/Chair'
 import { Characters } from './components/Character'
 import { Laptops } from './components/Laptop'
 import { WebcamProvider, useFaceExpressions } from './components/WebcamPreview'
-import { Html } from '@react-three/drei'
 
-function YouMarker(): React.JSX.Element {
-  // Slot 0: angle=0, sin(0)=0, cos(0)=1, radius=3.2
+// slot 0: x=0, z=3.2, character base y = 0.45 - 0.58*1.25 = -0.275
+// torso y = 0.88*1.25 = 1.1, head y = 0.52*1.25 = 0.65 above torso => total ~1.475, hair top ~1.7
+function YouHalo(): React.JSX.Element {
+  const ringRef = useRef<Mesh>(null)
+  useFrame(({ clock }) => {
+    if (ringRef.current) {
+      const s = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.08
+      ringRef.current.scale.set(s, s, s)
+      ringRef.current.material.opacity = 0.5 + Math.sin(clock.getElapsedTime() * 2) * 0.3
+    }
+  })
   return (
-    <Html position={[0, 3.2, 3.2 * 1.25]} center>
-      <div style={{
-        background: 'rgba(99,179,255,0.85)', color: '#fff',
-        fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold',
-        padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap',
-        pointerEvents: 'none'
-      }}>👤 YOU</div>
-    </Html>
+    <mesh ref={ringRef} position={[0, 2.05, 3.2]} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[0.28, 0.025, 12, 48]} />
+      <meshStandardMaterial color="#63b3ff" emissive="#63b3ff" emissiveIntensity={1.5} transparent opacity={0.8} />
+    </mesh>
   )
 }
 
@@ -50,8 +56,10 @@ function DebugOverlay(): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
+  const [showPanel, setShowPanel] = useState(true)
+
   return (
-    <WebcamProvider>
+    <WebcamProvider showPanel={showPanel}>
     <div style={{ width: '100vw', height: '100vh', background: '#e1e2ebeb' }}>
       <Canvas
         camera={{ position: [0, 3.5, 7], fov: 60 }}
@@ -66,7 +74,7 @@ function App(): React.JSX.Element {
         <Chairs />
         <Characters />
         <Laptops />
-        <YouMarker />
+        <YouHalo />
         <OrbitControls
           enablePan={false}
           minDistance={3}
@@ -76,22 +84,32 @@ function App(): React.JSX.Element {
         />
       </Canvas>
 
-      <div
-        style={{
-          position: 'fixed',
-          top: 20,
-          left: 24,
-          fontFamily: 'monospace',
-          color: '#63b3ff',
-          fontSize: 13,
-          letterSpacing: 2,
-          opacity: 0.7,
-          pointerEvents: 'none'
-        }}
-      >
+      <div style={{
+        position: 'fixed', top: 20, left: 24,
+        fontFamily: 'monospace', color: '#63b3ff',
+        fontSize: 13, letterSpacing: 2, opacity: 0.7, pointerEvents: 'none'
+      }}>
         BUTTER — ROOM 001
       </div>
-      <DebugOverlay />
+
+      {/* Settings gear button */}
+      <button
+        onClick={() => setShowPanel(p => !p)}
+        style={{
+          position: 'fixed', bottom: 20, left: 20,
+          width: 36, height: 36, borderRadius: '50%',
+          background: showPanel ? 'rgba(99,179,255,0.9)' : 'rgba(0,0,0,0.5)',
+          border: '1px solid rgba(99,179,255,0.4)',
+          color: '#fff', fontSize: 18, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 30, transition: 'background 0.2s'
+        }}
+        title="Toggle tracking panel"
+      >
+        ⚙️
+      </button>
+
+      {showPanel && <DebugOverlay />}
     </div>
     </WebcamProvider>
   )
