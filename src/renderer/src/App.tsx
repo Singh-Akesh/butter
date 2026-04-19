@@ -1,3 +1,4 @@
+import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { Room } from './components/Room'
@@ -5,6 +6,8 @@ import { Table } from './components/Table'
 import { Lighting } from './components/Lighting'
 import { FloorGrid } from './components/FloorGrid'
 import { Chairs } from './components/Chair'
+import { Characters } from './components/Character'
+import { Laptops } from './components/Laptop'
 
 function App(): React.JSX.Element {
   return (
@@ -20,6 +23,8 @@ function App(): React.JSX.Element {
         <Table />
         <FloorGrid />
         <Chairs />
+        <Characters />
+        <Laptops />
         <OrbitControls
           enablePan={false}
           minDistance={3}

@@ -14,7 +14,12 @@ function ChairUnit(): React.JSX.Element {
         <meshStandardMaterial color="#2c1f14" roughness={0.7} />
       </mesh>
       {/* Legs */}
-      {[[-0.22, -0.22], [-0.22, 0.22], [0.22, -0.22], [0.22, 0.22]].map(([x, z], i) => (
+      {[
+        [-0.22, -0.22],
+        [-0.22, 0.22],
+        [0.22, -0.22],
+        [0.22, 0.22]
+      ].map(([x, z], i) => (
         <mesh key={i} position={[x, 0.2, z]} castShadow>
           <cylinderGeometry args={[0.025, 0.025, 0.45, 8]} />
           <meshStandardMaterial color="#1a1a1a" metalness={0.6} roughness={0.3} />
