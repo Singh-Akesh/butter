@@ -1,6 +1,8 @@
 import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Group } from 'three'
+import { FaceExpressions } from '../hooks/useFaceLandmarker'
+import { useFaceExpressions } from './WebcamPreview'
 
 interface CharacterProps {
   position: [number, number, number]
@@ -10,6 +12,7 @@ interface CharacterProps {
   hairColor: string
   offset: number
   typing: boolean
+  expressions?: FaceExpressions
 }
 
 function Head({ skinColor, hairColor }: { skinColor: string; hairColor: string }): React.JSX.Element {
@@ -118,7 +121,7 @@ function Head({ skinColor, hairColor }: { skinColor: string; hairColor: string }
   )
 }
 
-function Character({ position, rotY, skinColor, shirtColor, hairColor, offset, typing }: CharacterProps): React.JSX.Element {
+function Character({ position, rotY, skinColor, shirtColor, hairColor, offset, typing, expressions }: CharacterProps): React.JSX.Element {
   const torsoRef = useRef<Group>(null)
   const headRef = useRef<Group>(null)
   const leftArmRef = useRef<Group>(null)
@@ -131,14 +134,19 @@ function Character({ position, rotY, skinColor, shirtColor, hairColor, offset, t
       torsoRef.current.position.y = 0.88 + Math.sin(t * 1.1) * 0.004
     }
     if (headRef.current) {
-      // Typing: head tilted down looking at screen; idle: gentle sway
-      headRef.current.rotation.x = typing
-        ? -0.35 + Math.sin(t * 0.4) * 0.04
-        : -0.05 + Math.sin(t * 0.28) * 0.04
-      headRef.current.rotation.y = typing ? Math.sin(t * 0.2) * 0.05 : Math.sin(t * 0.35) * 0.1
+      if (expressions) {
+        // Drive head from real face tracking
+        headRef.current.rotation.x = expressions.headRotX * 0.8
+        headRef.current.rotation.y = -expressions.headRotY * 0.8
+        headRef.current.rotation.z = expressions.headRotZ * 0.8
+      } else {
+        headRef.current.rotation.x = typing
+          ? -0.35 + Math.sin(t * 0.4) * 0.04
+          : -0.05 + Math.sin(t * 0.28) * 0.04
+        headRef.current.rotation.y = typing ? Math.sin(t * 0.2) * 0.05 : Math.sin(t * 0.35) * 0.1
+      }
     }
     if (leftArmRef.current) {
-      // Typing: arms forward on keyboard with finger tap
       leftArmRef.current.rotation.x = typing
         ? Math.PI / 1.8 + Math.sin(t * 8) * 0.06
         : Math.PI / 2.3 + Math.sin(t * 0.5) * 0.02
@@ -289,6 +297,7 @@ const CHARACTERS = [
 export function Characters(): React.JSX.Element {
   const count = 6
   const radius = 3.2
+  const faceExpressions = useFaceExpressions()
 
   return (
     <group>
@@ -306,6 +315,7 @@ export function Characters(): React.JSX.Element {
             hairColor={c.hairColor}
             offset={i * 1.3}
             typing={i % 2 === 0}
+            expressions={i === 0 ? faceExpressions : undefined}
           />
         )
       })}
